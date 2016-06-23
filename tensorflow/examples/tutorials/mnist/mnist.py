@@ -53,14 +53,22 @@ def inference(images, hidden1_units, hidden2_units):
   Returns:
     softmax_linear: Output tensor with the computed logits.
   """
+
   # Hidden 1
   with tf.name_scope('hidden1'):
+    # tf.truncated_normal(shape, mean=0.0, stddev=1.0, dtype=tf.float32, seed=None, name=None)
+    # 初始化权重变量,将根据所得到的均值和标准差，生成一个随机分布;
+    # A tensor of the specified shape filled with random truncated normal values。
+    # stddev 样本标准偏差,可用作聚集和分析函数;
+    # 
     weights = tf.Variable(
-        tf.truncated_normal([IMAGE_PIXELS, hidden1_units],
+               tf.truncated_normal([IMAGE_PIXELS, hidden1_units],
                             stddev=1.0 / math.sqrt(float(IMAGE_PIXELS))),
         name='weights')
     biases = tf.Variable(tf.zeros([hidden1_units]),
                          name='biases')
+    # tf.nn.relu(features,name=None（optional）):
+    # computes rectified linear:max(features(只有固定几个type可选),0)
     hidden1 = tf.nn.relu(tf.matmul(images, weights) + biases)
   # Hidden 2
   with tf.name_scope('hidden2'):
@@ -72,7 +80,7 @@ def inference(images, hidden1_units, hidden2_units):
                          name='biases')
     hidden2 = tf.nn.relu(tf.matmul(hidden1, weights) + biases)
   # Linear
-  with tf.name_scope('softmax_linear'):
+  with tf.name_scope('softmax_linear'):   
     weights = tf.Variable(
         tf.truncated_normal([hidden2_units, NUM_CLASSES],
                             stddev=1.0 / math.sqrt(float(hidden2_units))),
@@ -93,9 +101,16 @@ def loss(logits, labels):
   Returns:
     loss: Loss tensor of type float.
   """
+
+  #tf.nn.sparse_softmax_cross_entropy_with_logits(logits, labels, name=None)
+  #Computes sparse softmax cross entropy between logits and labels.
+  #output是维数与logits相同
+
+
   labels = tf.to_int64(labels)
   cross_entropy = tf.nn.sparse_softmax_cross_entropy_with_logits(
       logits, labels, name='xentropy')
+  #Computes the mean of elements across dimensions of a tensor.
   loss = tf.reduce_mean(cross_entropy, name='xentropy_mean')
   return loss
 
@@ -118,6 +133,10 @@ def training(loss, learning_rate):
     train_op: The Op for training.
   """
   # Add a scalar summary for the snapshot loss.
+  # tf.scalar_summary(tags, values, collections=None, name=None)
+  # tags: A string Tensor. 
+  # values: A real numeric Tensor.
+  # 
   tf.scalar_summary(loss.op.name, loss)
   # Create the gradient descent optimizer with the given learning rate.
   optimizer = tf.train.GradientDescentOptimizer(learning_rate)
